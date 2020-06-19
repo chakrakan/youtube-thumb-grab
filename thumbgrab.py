@@ -2,82 +2,115 @@
 # Download HQ Thumbnails of YouTube videos in any playlist
 # Resize them to your custom res
 
-import pafy
-import sys
+import logging
 import os
 import os.path
+import sys
+import re
+
+import pafy
 import wget
-import errno
-import logging
 from PIL import Image
 
-    
-def thumb_grab():
-    print("Enter Youtube playlist url")
-    a = raw_input(': ')
+logging.getLogger().setLevel(logging.ERROR)
 
-    #grab playlist id
-    playlist = pafy.get_playlist(a)
-    size = len(playlist['items'])  
-    print('This playlist has %s videos. Grab thumbnails? Y/N' % (size))
-    b = raw_input(': ')
 
-    if (b == "Y"):
-        dir = str(playlist['title'])   
-        if not os.path.exists(dir):  
-            os.makedirs(dir)
-            os.chdir(dir)
-        for v in playlist['items']:            # default playlist dict obj has no
-            v_id = str(v['playlist_meta']['encrypted_id']) # attribute for HQ thumb dl
-            vid = pafy.new(v_id)             # so must grab vid ID & use pafy obj
-            t = str(v['playlist_meta']['title']).split(':')  
-            #v_t = t[1]                     # THIS WILL STOP THE APP IF VID IS NOT (specific for TEDxUTSC)
-            format = t[:5] + ".jpg"    # UNDER GIVEN NAMING CONVENTION w/ delimiter
-            root, ext = os.path.splitext(format)
-            thumb_url = vid.bigthumb
-            thumb = wget.download(thumb_url, format)  # download and rename
-            print("Downloading, Please wait...")
-            if(v['playlist_meta']['encrypted_id'] == playlist['items'][size-1]['playlist_meta']['encrypted_id']):
-                print("Thumbnails downloaded!")
-                print("Would you like to resize images? Y/N")
-                c = raw_input(': ')
-                if (c == "Y"):       # this portion should create a resized vs of
-                    path = os.getcwd()    # image along with orig
-                    c_dir = os.listdir(path)
-                    print("Please enter width")
-                    w = int(raw_input(': '))
-                    print("Please enter height")
-                    h = int(raw_input(': '))
-                    for item in c_dir:
-                        if (os.path.isfile(item)):
-                            im = Image.open(item)
-                            f, e = os.path.splitext(item)
-                            imResize = im.resize((w, h), Image.ANTIALIAS)
-                            imResize.save(f + ' resized.jpg', 'JPEG', quality=90)
-                            if (item == c_dir[-1]):
-                                print("Resizing Complete!")
-                                resetter()
-                                
-                elif (c == "N"):
-                    resetter()
+def thumb_grab(playlist, size):
+    dir_name = playlist['title']  # Playlist title directory
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+        os.chdir(dir_name)
+        download_thumbnail(playlist, size)
     else:
-        print("Thanks for using Thumb Grab!")
-        sys.exit(0)
-        
+        os.chdir(dir_name)
+        download_thumbnail(playlist, size)
 
-logging.getLogger().setLevel(logging.ERROR)  #stop random false warnings >:@
-                                
 
-def resetter():
+def download_thumbnail(playlist, size):
+    try:
+        for video in playlist['items']:  # default playlist dict obj has no
+            video_id = video['playlist_meta']['encrypted_id']  # attribute for HQ thumb dl
+            video_obj = pafy.new(video_id)  # so must grab vid ID & use pafy obj
+            # ToDO fix replacing invalid characters for file naming convention
+            video_title = re.sub('\\*-&?#%<>;/\'@\\(\\)\\+{}/\\\\<\n\r\b\f\0\t', '', video['playlist_meta']['title'])
+            print(video_title)
+            name_format = video_title + ".jpg"  # UNDER GIVEN NAMING CONVENTION w/ delimiter
+            thumb_url = video_obj.bigthumb
+            wget.download(thumb_url, name_format)  # download and rename
+            print(" Downloading, Please wait...")
+    except Exception as e:
+        print("Error:", e.__class__, "Issue grabbing video thumbnail")
+        print("NOTE: Certain video names can create file output issues (if they have special characters no allowed in"
+              "file naming schemas. Please create an issue at "
+              "https://github.com/chakrakan/youtube-thumb-grab/"
+              "with the name of the file where the bug occurred.")
+        sys.exit(2)
+
+
+def resize_thumbnail(video, playlist, size):
+    if video['playlist_meta']['encrypted_id'] == playlist['items'][size - 1]['playlist_meta']['encrypted_id']:
+        print("Thumbnails downloaded!")
+        print("Would you like to resize images? Y/N")
+        rez_resp = input().lower().strip()
+        if rez_resp == "y":  # this portion should create a resized version image along with orig
+            path = os.getcwd()
+            c_dir = os.listdir(path)
+            print("Please enter width: ")
+            width = int(input())
+            print("Please enter height: ")
+            height = int(input())
+            for item in c_dir:
+                if os.path.isfile(item):
+                    im = Image.open(item)
+                    f, e = os.path.splitext(item)
+                    resize = im.resize((width, height), Image.ANTIALIAS)
+                    resize.save(f + ' resized.jpg', 'JPEG', quality=90)
+                    if item == c_dir[-1]:
+                        print("Resizing Complete!")
+                        reset()
+
+        elif rez_resp == "n":
+            reset()
+
+
+def reset():
     print("Would you like to download from another playlist? Y/N")
-    d = raw_input(': ')
-    if (d == "Y"):
+    d = input(': ').lower().strip()
+    if d == "y":
         os.chdir(os.path.dirname(sys.argv[0]))
         thumb_grab()
     else:
-        print("Thanks for using Thumb Grab!")
-        sys.exit(0)
+        end_script()
+
+
+def end_script():
+    print("Thanks for using Thumb Grab!")
+    sys.exit(0)
+
+
+def main():
+    """
+    Driver function
+    """
+    print("Enter Youtube playlist url: ")
+    playlist_url = input()
+
+    # grab playlist id
+    try:
+        playlist = pafy.get_playlist(playlist_url)
+        size = len(playlist['items'])
+        print('This playlist has %s videos. Grab thumbnails? Y/N' % size)
+        init_resp = input().lower().strip()
+
+        if init_resp == "y":
+            thumb_grab(playlist, size)
+        else:
+            end_script()
+    except Exception as e:
+        print("Error:", e.__class__, "Please make sure Youtube Playlist URL is valid.")
+        sys.exit(2)
+
 
 if __name__ == "__main__":
-    thumb_grab()
-#EOF
+    main()
+# EOF
