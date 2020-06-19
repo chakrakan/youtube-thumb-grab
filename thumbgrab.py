@@ -27,12 +27,12 @@ def thumb_grab(playlist, size):
 
 
 def download_thumbnail(playlist, size):
+    invalid_chars = {'<': '', '>': '', ':': '', '"': '', '/': '', "\\": '', '|': '', '?': '', '*': ''}
     try:
         for video in playlist['items']:  # default playlist dict obj has no
             video_id = video['playlist_meta']['encrypted_id']  # attribute for HQ thumb dl
             video_obj = pafy.new(video_id)  # so must grab vid ID & use pafy obj
-            # ToDO fix replacing invalid characters for file naming convention
-            video_title = re.sub('\\*-&?#%<>;/\'@\\(\\)\\+{}/\\\\<\n\r\b\f\0\t', '', video['playlist_meta']['title'])
+            video_title = str(video['playlist_meta']['title']).translate(str.maketrans(invalid_chars))
             print(video_title)
             name_format = video_title + ".jpg"  # UNDER GIVEN NAMING CONVENTION w/ delimiter
             thumb_url = video_obj.bigthumb
@@ -41,7 +41,7 @@ def download_thumbnail(playlist, size):
     except Exception as e:
         print("Error:", e.__class__, "Issue grabbing video thumbnail")
         print("NOTE: Certain video names can create file output issues (if they have special characters no allowed in"
-              "file naming schemas. Please create an issue at "
+              "file naming schemas. Please create an issue at \n"
               "https://github.com/chakrakan/youtube-thumb-grab/"
               "with the name of the file where the bug occurred.")
         sys.exit(2)
