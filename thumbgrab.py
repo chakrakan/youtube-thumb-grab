@@ -28,8 +28,8 @@ def thumb_grab(playlist, size):
 
 def download_thumbnail(playlist, size):
     invalid_chars = {'<': '', '>': '', ':': '', '"': '', '/': '', "\\": '', '|': '', '?': '', '*': ''}
-    try:
-        for video in playlist['items']:  # default playlist dict obj has no
+    for video in playlist['items']:  # default playlist dict obj has no
+        try:
             video_id = video['playlist_meta']['encrypted_id']  # attribute for HQ thumb dl
             video_obj = pafy.new(video_id)  # so must grab vid ID & use pafy obj
             video_title = str(video['playlist_meta']['title']).translate(str.maketrans(invalid_chars))
@@ -38,13 +38,14 @@ def download_thumbnail(playlist, size):
             thumb_url = video_obj.bigthumb
             wget.download(thumb_url, name_format)  # download and rename
             print(" Downloading, Please wait...")
-    except Exception as e:
-        print("Error:", e.__class__, "Issue grabbing video thumbnail")
-        print("NOTE: Certain video names can create file output issues (if they have special characters no allowed in"
-              "file naming schemas. Please create an issue at \n"
-              "https://github.com/chakrakan/youtube-thumb-grab/"
-              "with the name of the file where the bug occurred.")
-        sys.exit(2)
+        except Exception as e:
+            print("Error:", e.__class__, "Issue grabbing ", video_title, " thumbnail")
+            print(
+                "NOTE: Certain videos may have file output issues:"
+                "1.) if they have special characters no allowed in"
+                "file naming schemas). Please create an issue at \n"
+                "https://github.com/chakrakan/youtube-thumb-grab/"
+                "with the name of the file where the bug occurred.")
 
 
 def resize_thumbnail(video, playlist, size):
