@@ -38,6 +38,7 @@ def download_thumbnail(playlist, size):
             thumb_url = video_obj.bigthumb
             wget.download(thumb_url, name_format)  # download and rename
             print(" Downloading, Please wait...")
+            resize_thumbnail(video, playlist, size)
         except Exception as e:
             print("Error:", e.__class__, "Issue grabbing ", video_title, " thumbnail")
             print(
