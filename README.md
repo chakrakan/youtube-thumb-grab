@@ -22,7 +22,7 @@ Orginially built while I was a part of TEDxUTSC and volunteered as a webmaster. 
 ## Sample
 
 Here's a sample performed on this playlist by TED titled, [The 20 Most-Watched TEDTalks](https://www.youtube.com/playlist?list=PL70DEC2B0568B5469)
-![](https://github.com/chakrakan/youtube-thumb-grab/screenshots/demo.gif)
+![](https://github.com/chakrakan/youtube-thumb-grab/blob/master/screenshots/demo.gif)
 
 The output of the above demo is available in this repository as a sample within the titled folder.
 
