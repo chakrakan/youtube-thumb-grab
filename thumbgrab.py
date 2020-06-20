@@ -100,7 +100,7 @@ def main():
     try:
         playlist = pafy.get_playlist(playlist_url)
         size = len(playlist['items'])
-        print('This playlist has %s videos. Grab thumbnails? Y/N' % size)
+        print("Playlist \"" + playlist['title'] + "\" has %s videos. Grab thumbnails? Y/N" % size)
         init_resp = input().lower().strip()
 
         if init_resp == "y":
