@@ -14,7 +14,12 @@ from PIL import Image
 logging.getLogger().setLevel(logging.ERROR)
 
 
-def thumb_grab(playlist, size):
+def thumb_grab(playlist, size) -> None:
+    """
+    Thumb Grab function which makes a directory based on the playlist name
+    :param playlist: playlist object from Pafy
+    :param size:  Size of the playlist
+    """
     dir_name = playlist['title']  # Playlist title directory
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
@@ -25,7 +30,13 @@ def thumb_grab(playlist, size):
         download_thumbnail(playlist, size)
 
 
-def download_thumbnail(playlist, size):
+def download_thumbnail(playlist, size) -> None:
+    """
+    Logic to download the thumbnail for each video.
+    Also renames titles in case they have invalid characters based on filesystem types and OS
+    :param playlist: playlist object from Pafy
+    :param size: size of playlist
+    """
     invalid_chars = {'<': '', '>': '', ':': '', '"': '', '/': '', "\\": '', '|': '', '?': '', '*': ''}
     for video in playlist['items']:  # default playlist dict obj has no
         try:
@@ -48,7 +59,13 @@ def download_thumbnail(playlist, size):
                 "with the name of the file where the bug occurred.")
 
 
-def resize_thumbnail(video, playlist, size):
+def resize_thumbnail(video, playlist, size) -> None:
+    """
+    Logic to resize thumbnails retrieved from videos in playlists
+    :param video: the video object
+    :param playlist: playlist object
+    :param size: size of playlist
+    """
     if video['playlist_meta']['encrypted_id'] == playlist['items'][size - 1]['playlist_meta']['encrypted_id']:
         print("Thumbnails downloaded!")
         print("Would you like to resize images? Y/N")
@@ -74,7 +91,10 @@ def resize_thumbnail(video, playlist, size):
             reset()
 
 
-def reset():
+def reset() -> None:
+    """
+    Reset the script to run again for another playlist
+    """
     print("Would you like to download from another playlist? Y/N")
     d = input(': ').lower().strip()
     if d == "y":
@@ -84,14 +104,17 @@ def reset():
         end_script()
 
 
-def end_script():
+def end_script() -> None:
+    """
+    Output for end of script.
+    """
     print("Thanks for using Thumb Grab!")
     sys.exit(0)
 
 
-def main():
+def main() -> None:
     """
-    Driver function
+    Driver function for the script
     """
     print("Enter Youtube playlist url: ")
     playlist_url = input()
